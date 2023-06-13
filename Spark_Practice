@@ -1,0 +1,395 @@
+>>> empDf = spark.read.option("header",True).option("inferSchema",True).csv("/input_data/employees.csv")
+>>> empDf.count()                                                               
+50
+>>> empDf.select(count(salary)).alias(salary_count).show()
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+NameError: name 'count' is not defined
+>>> from pyspark.sql.functions import *
+>>> empDf.select(count(salary)).alias(salary_count).show()
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+NameError: name 'salary' is not defined
+>>> empDf.printSchema()
+root
+ |-- EMPLOYEE_ID: integer (nullable = true)
+ |-- FIRST_NAME: string (nullable = true)
+ |-- LAST_NAME: string (nullable = true)
+ |-- EMAIL: string (nullable = true)
+ |-- PHONE_NUMBER: string (nullable = true)
+ |-- HIRE_DATE: string (nullable = true)
+ |-- JOB_ID: string (nullable = true)
+ |-- SALARY: integer (nullable = true)
+ |-- COMMISSION_PCT: string (nullable = true)
+ |-- MANAGER_ID: string (nullable = true)
+ |-- DEPARTMENT_ID: integer (nullable = true)
+
+>>> empDf.select(count("salary")).alias(salary_count).show()
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+NameError: name 'salary_count' is not defined
+>>> empDf.select(count("salary")).alias("salary_count").show()
++-------------+
+|count(salary)|
++-------------+
+|           50|
++-------------+
+
+>>> empDf.select(count("salary").alias("salary_count")).show()
++------------+
+|salary_count|
++------------+
+|          50|
++------------+
+
+>>> empDf.select(max("salary").alias("max_salary")).show()
++----------+
+|max_salary|
++----------+
+|     24000|
++----------+
+
+>>> empDf.select(min("salary").alias("min_salary")).show()
++----------+
+|min_salary|
++----------+
+|      2100|
++----------+
+
+>>> empDf.select(sum("salary").alias("sum_salary")).show()
++----------+
+|sum_salary|
++----------+
+|    309116|
++----------+
+
+>>> empDf.select(avg("salary").alias("avg_salary")).show()
++----------+
+|avg_salary|
++----------+
+|   6182.32|
++----------+
+
+>>> empDf.select("EMPLOYEE_ID","FIRST_NAME","DEPARTMENT_ID","SALARY").orderBy(col("SALARY").desc(),col("DEPARTMENT_ID").asc()).show()
++-----------+-----------+-------------+------+
+|EMPLOYEE_ID| FIRST_NAME|DEPARTMENT_ID|SALARY|
++-----------+-----------+-------------+------+
+|        100|     Steven|           90| 24000|
+|        102|        Lex|           90| 17000|
+|        101|      Neena|           90| 17000|
+|        201|    Michael|           20| 13000|
+|        108|      Nancy|          100| 12008|
+|        205|    Shelley|          110| 12008|
+|        114|        Den|           30| 11000|
+|        204|    Hermann|           70| 10000|
+|        103|  Alexander|           60|  9000|
+|        109|     Daniel|          100|  9000|
+|        206|    William|          110|  8300|
+|        121|       Adam|           50|  8200|
+|        110|       John|          100|  8200|
+|        120|    Matthew|           50|  8000|
+|        122|      Payam|           50|  7900|
+|        112|Jose Manuel|          100|  7800|
+|        111|     Ismael|          100|  7700|
+|        113|       Luis|          100|  6900|
+|        203|      Susan|           40|  6500|
+|        123|     Shanta|           50|  6500|
++-----------+-----------+-------------+------+
+only showing top 20 rows
+
+>>> empDf.select("EMPLOYEE_ID","FIRST_NAME","DEPARTMENT_ID","SALARY").orderBy(col(col("DEPARTMENT_ID").asc(),col("SALARY").desc()).show()
+... empDf.select("EMPLOYEE_ID","FIRST_NAME","DEPARTMENT_ID","SALARY").orderBy(col("DEPARTMENT_ID").asc(),col("SALARY").desc()).show()
+  File "<stdin>", line 2
+    empDf.select("EMPLOYEE_ID","FIRST_NAME","DEPARTMENT_ID","SALARY").orderBy(col("DEPARTMENT_ID").asc(),col("SALARY").desc()).show()
+    ^
+SyntaxError: invalid syntax
+>>> empDf.select("EMPLOYEE_ID","FIRST_NAME","DEPARTMENT_ID","SALARY").orderBy(col("DEPARTMENT_ID").asc(),col("SALARY").desc()).show()
++-----------+----------+-------------+------+
+|EMPLOYEE_ID|FIRST_NAME|DEPARTMENT_ID|SALARY|
++-----------+----------+-------------+------+
+|        200|  Jennifer|           10|  4400|
+|        201|   Michael|           20| 13000|
+|        202|       Pat|           20|  6000|
+|        114|       Den|           30| 11000|
+|        115| Alexander|           30|  3100|
+|        116|    Shelli|           30|  2900|
+|        117|     Sigal|           30|  2800|
+|        118|       Guy|           30|  2600|
+|        119|     Karen|           30|  2500|
+|        203|     Susan|           40|  6500|
+|        121|      Adam|           50|  8200|
+|        120|   Matthew|           50|  8000|
+|        122|     Payam|           50|  7900|
+|        123|    Shanta|           50|  6500|
+|        124|     Kevin|           50|  5800|
+|        137|    Renske|           50|  3600|
+|        133|     Jason|           50|  3300|
+|        129|     Laura|           50|  3300|
+|        125|     Julia|           50|  3200|
+|        138|   Stephen|           50|  3200|
++-----------+----------+-------------+------+
+only showing top 20 rows
+
+>>> empDf.groupBy("DEPARTMENT_ID").sum("SALARY").show(
+... )
++-------------+-----------+
+|DEPARTMENT_ID|sum(SALARY)|
++-------------+-----------+
+|           20|      19000|
+|           40|       6500|
+|          100|      51608|
+|           10|       4400|
+|           50|      85600|
+|           70|      10000|
+|           90|      58000|
+|           60|      28800|
+|          110|      20308|
+|           30|      24900|
++-------------+-----------+
+
+>>> empDf.groupBy("DEPARTMENT_ID").max("SALARY").show()
++-------------+-----------+
+|DEPARTMENT_ID|max(SALARY)|
++-------------+-----------+
+|           20|      13000|
+|           40|       6500|
+|          100|      12008|
+|           10|       4400|
+|           50|       8200|
+|           70|      10000|
+|           90|      24000|
+|           60|       9000|
+|          110|      12008|
+|           30|      11000|
++-------------+-----------+
+
+>>> empDf.groupBy("DEPARTMENT_ID").avg("SALARY").show()
++-------------+------------------+
+|DEPARTMENT_ID|       avg(SALARY)|
++-------------+------------------+
+|           20|            9500.0|
+|           40|            6500.0|
+|          100| 8601.333333333334|
+|           10|            4400.0|
+|           50|3721.7391304347825|
+|           70|           10000.0|
+|           90|19333.333333333332|
+|           60|            5760.0|
+|          110|           10154.0|
+|           30|            4150.0|
++-------------+------------------+
+
+>>> empDF.groupBy("DEPARTEMENT_ID").agg(sum("SALARY").alias("SUM_SALARY"),max("SALARY").alias("MAX_SALARY"),min("SALARY").alias("MIN_SALARY"),avg("SALARY").alias("AVG_SALARY")).show()
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+NameError: name 'empDF' is not defined
+>>> empDf.groupBy("DEPARTEMENT_ID").agg(sum("SALARY").alias("SUM_SALARY"),max("SALARY").alias("MAX_SALARY"),min("SALARY").alias("MIN_SALARY"),avg("SALARY").alias("AVG_SALARY")).show()
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/usr/local/spark/python/pyspark/sql/group.py", line 118, in agg
+    jdf = self._jgd.agg(exprs[0]._jc,
+  File "/usr/local/spark/python/lib/py4j-0.10.9.3-src.zip/py4j/java_gateway.py", line 1321, in __call__
+  File "/usr/local/spark/python/pyspark/sql/utils.py", line 117, in deco
+    raise converted from None
+pyspark.sql.utils.AnalysisException: cannot resolve 'DEPARTEMENT_ID' given input columns: [COMMISSION_PCT, DEPARTMENT_ID, EMAIL, EMPLOYEE_ID, FIRST_NAME, HIRE_DATE, JOB_ID, LAST_NAME, MANAGER_ID, PHONE_NUMBER, SALARY];
+'Aggregate ['DEPARTEMENT_ID], ['DEPARTEMENT_ID, sum(SALARY#23) AS SUM_SALARY#295L, max(SALARY#23) AS MAX_SALARY#297, min(SALARY#23) AS MIN_SALARY#299, avg(SALARY#23) AS AVG_SALARY#301]
++- Relation [EMPLOYEE_ID#16,FIRST_NAME#17,LAST_NAME#18,EMAIL#19,PHONE_NUMBER#20,HIRE_DATE#21,JOB_ID#22,SALARY#23,COMMISSION_PCT#24,MANAGER_ID#25,DEPARTMENT_ID#26] csv
+
+>>> empDf.groupBy("DEPARTMENT_ID").agg(sum("SALARY").alias("SUM_SALARY"),max("SALARY").alias("MAX_SALARY"),min("SALARY").alias("MIN_SALARY"),avg("SALARY").alias("AVG_SALARY")).show()
++-------------+----------+----------+----------+------------------+
+|DEPARTMENT_ID|SUM_SALARY|MAX_SALARY|MIN_SALARY|        AVG_SALARY|
++-------------+----------+----------+----------+------------------+
+|           20|     19000|     13000|      6000|            9500.0|
+|           40|      6500|      6500|      6500|            6500.0|
+|          100|     51608|     12008|      6900| 8601.333333333334|
+|           10|      4400|      4400|      4400|            4400.0|
+|           50|     85600|      8200|      2100|3721.7391304347825|
+|           70|     10000|     10000|     10000|           10000.0|
+|           90|     58000|     24000|     17000|19333.333333333332|
+|           60|     28800|      9000|      4200|            5760.0|
+|          110|     20308|     12008|      8300|           10154.0|
+|           30|     24900|     11000|      2500|            4150.0|
++-------------+----------+----------+----------+------------------+
+
+>>> empDf.groupBy("DEPARTMENT_ID").agg(sum("SALARY").alias("SUM_SALARY"),max("SALARY").alias("MAX_SALARY"),min("SALARY").alias("MIN_SALARY"),avg("SALARY").alias("AVG_SALARY")).where(col("NEW_SALARY")>10000).show()
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/usr/local/spark/python/pyspark/sql/dataframe.py", line 1733, in filter
+    jdf = self._jdf.filter(condition._jc)
+  File "/usr/local/spark/python/lib/py4j-0.10.9.3-src.zip/py4j/java_gateway.py", line 1321, in __call__
+  File "/usr/local/spark/python/pyspark/sql/utils.py", line 117, in deco
+    raise converted from None
+pyspark.sql.utils.AnalysisException: cannot resolve 'NEW_SALARY' given input columns: [AVG_SALARY, DEPARTMENT_ID, MAX_SALARY, MIN_SALARY, SUM_SALARY];
+'Filter ('NEW_SALARY > 10000)
++- Aggregate [DEPARTMENT_ID#26], [DEPARTMENT_ID#26, sum(SALARY#23) AS SUM_SALARY#381L, max(SALARY#23) AS MAX_SALARY#383, min(SALARY#23) AS MIN_SALARY#385, avg(SALARY#23) AS AVG_SALARY#387]
+   +- Relation [EMPLOYEE_ID#16,FIRST_NAME#17,LAST_NAME#18,EMAIL#19,PHONE_NUMBER#20,HIRE_DATE#21,JOB_ID#22,SALARY#23,COMMISSION_PCT#24,MANAGER_ID#25,DEPARTMENT_ID#26] csv
+
+>>> empDf.groupBy("DEPARTMENT_ID").agg(sum("SALARY").alias("SUM_SALARY"),max("SALARY").alias("MAX_SALARY"),min("SALARY").alias("MIN_SALARY"),avg("SALARY").alias("AVG_SALARY")).where(col("SUM_SALARY")>10000).show()
++-------------+----------+----------+----------+------------------+
+|DEPARTMENT_ID|SUM_SALARY|MAX_SALARY|MIN_SALARY|        AVG_SALARY|
++-------------+----------+----------+----------+------------------+
+|           20|     19000|     13000|      6000|            9500.0|
+|          100|     51608|     12008|      6900| 8601.333333333334|
+|           50|     85600|      8200|      2100|3721.7391304347825|
+|           90|     58000|     24000|     17000|19333.333333333332|
+|           60|     28800|      9000|      4200|            5760.0|
+|          110|     20308|     12008|      8300|           10154.0|
+|           30|     24900|     11000|      2500|            4150.0|
++-------------+----------+----------+----------+------------------+
+
+>>> df = empDf.withColumn("EMP_LEVEL",when (col("SALARY")>15000,"A").when ((col("SALARY")<15000) & (col("SALARY")>=10000),"B").otherwise("C")
+... )
+>>> df.show()
++-----------+----------+---------+--------+------------+---------+----------+------+--------------+----------+-------------+---------+
+|EMPLOYEE_ID|FIRST_NAME|LAST_NAME|   EMAIL|PHONE_NUMBER|HIRE_DATE|    JOB_ID|SALARY|COMMISSION_PCT|MANAGER_ID|DEPARTMENT_ID|EMP_LEVEL|
++-----------+----------+---------+--------+------------+---------+----------+------+--------------+----------+-------------+---------+
+|        198|    Donald| OConnell|DOCONNEL|650.507.9833|21-JUN-07|  SH_CLERK|  2600|            - |       124|           50|        C|
+|        199|   Douglas|    Grant|  DGRANT|650.507.9844|13-JAN-08|  SH_CLERK|  2600|            - |       124|           50|        C|
+|        200|  Jennifer|   Whalen| JWHALEN|515.123.4444|17-SEP-03|   AD_ASST|  4400|            - |       101|           10|        C|
+|        201|   Michael|Hartstein|MHARTSTE|515.123.5555|17-FEB-04|    MK_MAN| 13000|            - |       100|           20|        B|
+|        202|       Pat|      Fay|    PFAY|603.123.6666|17-AUG-05|    MK_REP|  6000|            - |       201|           20|        C|
+|        203|     Susan|   Mavris| SMAVRIS|515.123.7777|07-JUN-02|    HR_REP|  6500|            - |       101|           40|        C|
+|        204|   Hermann|     Baer|   HBAER|515.123.8888|07-JUN-02|    PR_REP| 10000|            - |       101|           70|        B|
+|        205|   Shelley|  Higgins|SHIGGINS|515.123.8080|07-JUN-02|    AC_MGR| 12008|            - |       101|          110|        B|
+|        206|   William|    Gietz|  WGIETZ|515.123.8181|07-JUN-02|AC_ACCOUNT|  8300|            - |       205|          110|        C|
+|        100|    Steven|     King|   SKING|515.123.4567|17-JUN-03|   AD_PRES| 24000|            - |        - |           90|        A|
+|        101|     Neena|  Kochhar|NKOCHHAR|515.123.4568|21-SEP-05|     AD_VP| 17000|            - |       100|           90|        A|
+|        102|       Lex|  De Haan| LDEHAAN|515.123.4569|13-JAN-01|     AD_VP| 17000|            - |       100|           90|        A|
+|        103| Alexander|   Hunold| AHUNOLD|590.423.4567|03-JAN-06|   IT_PROG|  9000|            - |       102|           60|        C|
+|        104|     Bruce|    Ernst|  BERNST|590.423.4568|21-MAY-07|   IT_PROG|  6000|            - |       103|           60|        C|
+|        105|     David|   Austin| DAUSTIN|590.423.4569|25-JUN-05|   IT_PROG|  4800|            - |       103|           60|        C|
+|        106|     Valli|Pataballa|VPATABAL|590.423.4560|05-FEB-06|   IT_PROG|  4800|            - |       103|           60|        C|
+|        107|     Diana|  Lorentz|DLORENTZ|590.423.5567|07-FEB-07|   IT_PROG|  4200|            - |       103|           60|        C|
+|        108|     Nancy|Greenberg|NGREENBE|515.124.4569|17-AUG-02|    FI_MGR| 12008|            - |       101|          100|        B|
+|        109|    Daniel|   Faviet| DFAVIET|515.124.4169|16-AUG-02|FI_ACCOUNT|  9000|            - |       108|          100|        C|
+|        110|      John|     Chen|   JCHEN|515.124.4269|28-SEP-05|FI_ACCOUNT|  8200|            - |       108|          100|        C|
++-----------+----------+---------+--------+------------+---------+----------+------+--------------+----------+-------------+---------+
+only showing top 20 rows
+
+>>> df.select("EMPLOYEE_ID,"SALARY","DEPARTMENT_ID","EMP_LEVEL").show()
+  File "<stdin>", line 1
+    df.select("EMPLOYEE_ID,"SALARY","DEPARTMENT_ID","EMP_LEVEL").show()
+                            ^
+SyntaxError: invalid syntax
+>>> df.select("EMPLOYEE_ID","SALARY","DEPARTMENT_ID","EMP_LEVEL").show()
++-----------+------+-------------+---------+
+|EMPLOYEE_ID|SALARY|DEPARTMENT_ID|EMP_LEVEL|
++-----------+------+-------------+---------+
+|        198|  2600|           50|        C|
+|        199|  2600|           50|        C|
+|        200|  4400|           10|        C|
+|        201| 13000|           20|        B|
+|        202|  6000|           20|        C|
+|        203|  6500|           40|        C|
+|        204| 10000|           70|        B|
+|        205| 12008|          110|        B|
+|        206|  8300|          110|        C|
+|        100| 24000|           90|        A|
+|        101| 17000|           90|        A|
+|        102| 17000|           90|        A|
+|        103|  9000|           60|        C|
+|        104|  6000|           60|        C|
+|        105|  4800|           60|        C|
+|        106|  4800|           60|        C|
+|        107|  4200|           60|        C|
+|        108| 12008|          100|        B|
+|        109|  9000|          100|        C|
+|        110|  8200|          100|        C|
++-----------+------+-------------+---------+
+only showing top 20 rows
+
+>>> empDf.CreateOrReplaceTempView("employee")
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/usr/local/spark/python/pyspark/sql/dataframe.py", line 1659, in __getattr__
+    raise AttributeError(
+AttributeError: 'DataFrame' object has no attribute 'CreateOrReplaceTempView'
+>>> empDf.createOrReplaceTempView("employee")
+>>> spark.sql(select employee_id, department_id,name from employee).show()
+  File "<stdin>", line 1
+    spark.sql(select employee_id, department_id,name from employee).show()
+                     ^
+SyntaxError: invalid syntax
+>>> spark.sql("select employee_id, department_id,salary from employee").show()
++-----------+-------------+------+
+|employee_id|department_id|salary|
++-----------+-------------+------+
+|        198|           50|  2600|
+|        199|           50|  2600|
+|        200|           10|  4400|
+|        201|           20| 13000|
+|        202|           20|  6000|
+|        203|           40|  6500|
+|        204|           70| 10000|
+|        205|          110| 12008|
+|        206|          110|  8300|
+|        100|           90| 24000|
+|        101|           90| 17000|
+|        102|           90| 17000|
+|        103|           60|  9000|
+|        104|           60|  6000|
+|        105|           60|  4800|
+|        106|           60|  4800|
+|        107|           60|  4200|
+|        108|          100| 12008|
+|        109|          100|  9000|
+|        110|          100|  8200|
++-----------+-------------+------+
+only showing top 20 rows
+
+>>> spark.sql(select department_id,sum(Salary) from employee group by department_id).show()
+  File "<stdin>", line 1
+    spark.sql(select department_id,sum(Salary) from employee group by department_id).show()
+                     ^
+SyntaxError: invalid syntax
+>>> spark.sql("select department_id,sum(Salary) from employee group by department_id").show()
++-------------+-----------+
+|department_id|sum(Salary)|
++-------------+-----------+
+|           20|      19000|
+|           40|       6500|
+|          100|      51608|
+|           10|       4400|
+|           50|      85600|
+|           70|      10000|
+|           90|      58000|
+|           60|      28800|
+|          110|      20308|
+|           30|      24900|
++-------------+-----------+
+
+>>>  deptDf = spark.read.option("header",True).option("inferSchema",True).csv("/input_data/departments.csv")
+  File "<stdin>", line 1
+    deptDf = spark.read.option("header",True).option("inferSchema",True).csv("/input_data/departments.csv")
+IndentationError: unexpected indent
+>>>  deptDf = spark.read.option("header",True).option("inferSchema",True).csv("/input_data/departments.csv")
+  File "<stdin>", line 1
+    deptDf = spark.read.option("header",True).option("inferSchema",True).csv("/input_data/departments.csv")
+IndentationError: unexpected indent
+>>> deptDf = spark.read.option("header",True).option("inferSchema",True).csv("/input_data/departments.csv")
+>>> deptDf.show()
++-------------+--------------------+----------+-----------+
+|DEPARTMENT_ID|     DEPARTMENT_NAME|MANAGER_ID|LOCATION_ID|
++-------------+--------------------+----------+-----------+
+|           10|      Administration|       200|       1700|
+|           20|           Marketing|       201|       1800|
+|           30|          Purchasing|       114|       1700|
+|           40|     Human Resources|       203|       2400|
+|           50|            Shipping|       121|       1500|
+|           60|                  IT|       103|       1400|
+|           70|    Public Relations|       204|       2700|
+|           80|               Sales|       145|       2500|
+|           90|           Executive|       100|       1700|
+|          100|             Finance|       108|       1700|
+|          110|          Accounting|       205|       1700|
+|          120|            Treasury|        - |       1700|
+|          130|       Corporate Tax|        - |       1700|
+|          140|  Control And Credit|        - |       1700|
+|          150|Shareholder Services|        - |       1700|
+|          160|            Benefits|        - |       1700|
+|          170|       Manufacturing|        - |       1700|
+|          180|        Construction|        - |       1700|
+|          190|         Contracting|        - |       1700|
+|          200|          Operations|        - |       1700|
++-------------+--------------------+----------+-----------+
+only showing top 20 rows
